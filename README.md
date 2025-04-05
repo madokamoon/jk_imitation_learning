@@ -1,2 +1,2 @@
 # jk_imitation-learning
-jk5机械臂
+敬科jk5机械臂

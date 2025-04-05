@@ -1,0 +1,12 @@
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/uninstall.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/jk_robot_uninstall.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/jk_robot_driver.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/jk_robot_server.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/jk_robot_client_test.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/test.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/list_install_components.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/install.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/install/local.dir
+/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug/CMakeFiles/install/strip.dir

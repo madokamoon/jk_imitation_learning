@@ -1,0 +1,97 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-270ffeb553cbc4c716e7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "jk_robot",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "jk_robot_client_test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jk_robot_client_test-Debug-47aca548acbc7d99f42a.json",
+					"name" : "jk_robot_client_test",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "jk_robot_driver::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jk_robot_driver-Debug-18b979b177ae590eda32.json",
+					"name" : "jk_robot_driver",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "jk_robot_server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jk_robot_server-Debug-cf4eef990a5cd4db6088.json",
+					"name" : "jk_robot_server",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "jk_robot_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-jk_robot_uninstall-Debug-f184342bff29311e3e00.json",
+					"name" : "jk_robot_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-bb65b82d598a8664001f.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot/cmake-build-debug",
+		"source" : "/home/starsky/project/ROS2EmbeddingAI/imitation_learning/src/ros2_jk_robot/jk_robot"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

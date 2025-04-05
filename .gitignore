@@ -1,0 +1,87 @@
+# ROS2 build and install directories
+build/
+install/
+log/
+data/
+
+# IDE specific files
+.vscode/
+.idea/
+
+# 忽略以下文件？？
+
+# # Python
+# __pycache__/
+# *.py[cod]
+# *$py.class
+# *.so
+# .Python
+# env/
+# build/
+# develop-eggs/
+# dist/
+# downloads/
+# eggs/
+# .eggs/
+# lib/
+# lib64/
+# parts/
+# sdist/
+# var/
+# *.egg-info/
+# .installed.cfg
+# *.egg
+
+# # Compiled Object files
+# *.slo
+# *.lo
+# *.o
+# *.obj
+
+# # Precompiled Headers
+# *.gch
+# *.pch
+
+# # Compiled Dynamic libraries
+# *.so
+# *.dylib
+# *.dll
+
+# # Fortran module files
+# *.mod
+# *.smod
+
+# # Compiled Static libraries
+# *.lai
+# *.la
+# *.a
+# *.lib
+
+# # Executables
+# *.exe
+# *.out
+# *.app
+
+# # Data files
+# *.bag
+# *.bag.active
+# *.bag.bk
+# *.bag.bk2
+# *.bag.bk3
+# *.bag.bk4
+# *.bag.bk5
+# *.bag.bk6
+# *.bag.bk7
+# *.bag.bk8
+# *.bag.bk9
+# *.bag.bk10
+
+# # Temporary files
+# *.tmp
+# *.bak
+# *.swp
+# *~
+
+# # System Files
+# .DS_Store
+# Thumbs.db 

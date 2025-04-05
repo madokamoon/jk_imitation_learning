@@ -1,0 +1,45 @@
+# 基础设置
+sample_frequency: &sample_frequency
+  20
+go_on_path: ""
+record_prefix_path: "data"
+image_show: false
+elapsed_time_show: false
+robot_init_pos: &robot_init_pos
+  [ 0.093, 0.336, 0.341, -172.385, -1.685, 122.126 ]
+robot_end_pos: [ -0.170, 0.594, 0.320, -175, -0.3, 147.6 ]
+end_delay: 10
+# 机械臂客户端
+robot_client:
+  robot_init_pos: *robot_init_pos
+  pos_target_d: 0.0025
+  saved_mode: "zarr"
+  prefix: "robot_states_zarr"
+# XBOX
+xbox_controller:
+  sample_frequency: *sample_frequency
+# 相机
+cameras_subscriber:
+  camera0:
+    camera_id: 0
+    if_record: true
+    sample_frequency: 30
+    prefix: "videos"
+  camera1:
+    camera_id: 1
+    if_record: true
+    sample_frequency: 30
+    prefix: "videos"
+  camera2:
+    camera_id: 2
+    if_record: true
+    sample_frequency: 30
+    prefix: "videos"
+# Diffusion Policy设置
+diffusion_policy:
+  ckpt_path: "data/epoch=0050-train_loss=0.120.ckpt"
+  output_dir: "data/pusht_eval_output"
+  device: "cuda:0"
+  control_frequency: 20
+  steps_per_inference: 6
+  num_inference_steps: 16 # DDIM inference iterations

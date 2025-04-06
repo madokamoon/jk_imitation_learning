@@ -1,5 +1,6 @@
 import pathlib
-
+import sys
+print("Running with Python:", sys.executable)
 import rclpy
 from rclpy.callback_groups import CallbackGroup
 from rclpy.node import Node
@@ -151,9 +152,16 @@ class DataSampler(Node):
                     now_pos[0:6] = copy.deepcopy(self.robot_client.get_end_pos())
                     now_pos[3:6] *= np.pi / 180
                     data["action"] = now_pos.tolist()
+
+                    for camera_subscirber in self.camera_subscirbers:
+                        data[camera_subscirber.camera_name]=camera_subscirber.get_img()
+
                     self.robot_client.put_data(data)
                     d_pos = np.linalg.norm(now_pos[0:6] - np.array(target_pos))
                     print("d_pos: {0}, target: {1}".format(d_pos, 0.003))
+
+
+                        
                     if self.img_show:
                         for camera_subscirber in self.camera_subscirbers:
                             img = camera_subscirber.get_img()
@@ -210,12 +218,12 @@ class DataSampler(Node):
                 # print("command_rec: {0}".format(control_command.tolist()))
                 # print("command_after: {0}".format(action.tolist()))
 
-
                 # robot_eef_pose-7 action-7 end_vel_command-6
                 data["robot_eef_pose"] = end_pos.tolist() + [action[6]]  
                 data["action"] = action.tolist()
                 data["end_vel_command"] = control_command[0:6].tolist()
-
+                for camera_subscirber in self.camera_subscirbers:
+                    data[camera_subscirber.camera_name]=camera_subscirber.get_img()
                 self.robot_client.put_data(data)
 
             # 处理图片显示

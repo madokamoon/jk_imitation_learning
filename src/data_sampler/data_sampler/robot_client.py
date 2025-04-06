@@ -146,11 +146,11 @@ class RobotClient:
                 self.datas[k].append(v)
         elif self.saved_mode == "hdf5":
             self.datas['/observations/qpos'].append(data["robot_eef_pose"])
-            end_vel_command_expend_to_seven = data['end_vel_command'] + data['action'][6]  # 爪子速度定义为 命令吗，act中爪子并不是 二变量
+            end_vel_command_expend_to_seven = data['end_vel_command'] + [data['action'][6]] # 爪子速度定义为命令吗，act中爪子不是二变量
             self.datas['/observations/qvel'].append(end_vel_command_expend_to_seven)
             self.datas['/action'].append(data['action'])
             for cam_name in self.camera_names:
-                self.datas[f'/observations/images/{cam_name}'].append(data['images'][cam_name])  # 这里data还未实现
+                self.datas[f'/observations/images/{cam_name}'].append(data[cam_name])
 
 
     def delete_sampled_datas(self):

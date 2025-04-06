@@ -11,7 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools','h5py'],
     zip_safe=True,
     maintainer='starsky',
     maintainer_email='starsky@todo.todo',
@@ -21,7 +21,6 @@ setup(
     entry_points={
         'console_scripts': [
             'data_sampler = data_sampler.data_sampler:main',
-            'camera_test = data_sampler.camera_test:main',
         ],
     },
 )

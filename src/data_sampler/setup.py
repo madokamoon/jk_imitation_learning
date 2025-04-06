@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'data_sampler = data_sampler.data_sampler:main',
+            'camera_test = data_sampler.camera_test:main',
         ],
     },
 )

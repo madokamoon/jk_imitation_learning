@@ -3,10 +3,13 @@ build/
 install/
 log/
 data/
+wandb/
 
 # IDE specific files
 .vscode/
 .idea/
+
+
 
 # 忽略以下文件？？
 

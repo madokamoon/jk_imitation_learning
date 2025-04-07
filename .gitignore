@@ -4,87 +4,85 @@ install/
 log/
 data/
 wandb/
+training/
 
 # IDE specific files
 .vscode/
 .idea/
 
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# 忽略以下文件？？
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-# # Python
-# __pycache__/
-# *.py[cod]
-# *$py.class
-# *.so
-# .Python
-# env/
-# build/
-# develop-eggs/
-# dist/
-# downloads/
-# eggs/
-# .eggs/
-# lib/
-# lib64/
-# parts/
-# sdist/
-# var/
-# *.egg-info/
-# .installed.cfg
-# *.egg
+# Precompiled Headers
+*.gch
+*.pch
 
-# # Compiled Object files
-# *.slo
-# *.lo
-# *.o
-# *.obj
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
 
-# # Precompiled Headers
-# *.gch
-# *.pch
+# Fortran module files
+*.mod
+*.smod
 
-# # Compiled Dynamic libraries
-# *.so
-# *.dylib
-# *.dll
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
 
-# # Fortran module files
-# *.mod
-# *.smod
+# Executables
+*.exe
+*.out
+*.app
 
-# # Compiled Static libraries
-# *.lai
-# *.la
-# *.a
-# *.lib
+# Data files
+*.bag
+*.bag.active
+*.bag.bk
+*.bag.bk2
+*.bag.bk3
+*.bag.bk4
+*.bag.bk5
+*.bag.bk6
+*.bag.bk7
+*.bag.bk8
+*.bag.bk9
+*.bag.bk10
 
-# # Executables
-# *.exe
-# *.out
-# *.app
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
 
-# # Data files
-# *.bag
-# *.bag.active
-# *.bag.bk
-# *.bag.bk2
-# *.bag.bk3
-# *.bag.bk4
-# *.bag.bk5
-# *.bag.bk6
-# *.bag.bk7
-# *.bag.bk8
-# *.bag.bk9
-# *.bag.bk10
-
-# # Temporary files
-# *.tmp
-# *.bak
-# *.swp
-# *~
-
-# # System Files
-# .DS_Store
-# Thumbs.db 
+# System Files
+.DS_Store
+Thumbs.db 

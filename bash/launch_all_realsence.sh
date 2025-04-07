@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# 获取所有主序列号（排除 Asic），每个前面加 "_"
 serials=($(rs-enumerate-devices | grep "Serial Number" | grep -v "Asic" | awk '{print "_"$NF}'))
 
 if [ ${#serials[@]} -eq 0 ]; then

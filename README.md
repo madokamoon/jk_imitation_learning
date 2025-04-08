@@ -1,6 +1,6 @@
 # jk_imitation-learning
-敬科jk5机械臂 模仿学习
 
+敬科jk5机械臂 模仿学习
 [GitHub - madokamoon/jk\_imitation\_learning](https://github.com/madokamoon/jk_imitation_learning)
 
 # 环境配置
@@ -43,13 +43,39 @@ pip install ipython
 python record_sim_episodes.py --task_name sim_transfer_cube_scripted --dataset_dir data/test --num_episodes 1 --onscreen_render
 ```
 ## 安装librealsense
-安装包
-[v2.54.2.tar.gz](https://github.com/IntelRealSense/librealsense/archive/refs/tags/v2.54.2.tar.gz)
-安装说明，跳过内核修补
-[librealsense/doc/installation.md at master · IntelRealSense/librealsense · GitHub](https://github.com/IntelRealSense/librealsense/blob/master/doc/installation.md)
+
+安装包：[v2.54.2.tar.gz](https://github.com/IntelRealSense/librealsense/archive/refs/tags/v2.54.2.tar.gz)
+
+安装说明，跳过内核修补：[IntelRealSense/librealsense · GitHub](https://github.com/IntelRealSense/librealsense/blob/master/doc/installation.md)
+
 **测试**
 ```shell
 realsense-viewer
+```
+
+## 安装realsense-ros-wrapper
+
+详情见[realsense搭建指南（同时适用L515/D435i/D455](https://pcn5euai2w60.feishu.cn/wiki/DCzow0AAji3WB0kuEfGc7SIknjh)
+下载4.54.1版本ros2 wrapper：[https://github.com/IntelRealSense/realsense-ros/archive/refs/tags/4.54.1.tar.gz](https://github.com/IntelRealSense/realsense-ros/archive/refs/tags/4.54.1.tar.gz)
+```shell
+#创建一个 ROS2 工作空间
+mkdir -p ~/realsence_warpper/src
+cd ~/realsence_warpper/src/  #解压到此
+cd ~/realsence_warpper
+#安装依赖项
+sudo apt-get install python3-rosdep -y
+sudo rosdep init 
+rosdep update 
+rosdep install -i --from-path src --rosdistro $ROS_DISTRO --skip-keys=librealsense2 -y
+colcon build
+# 手动 source
+. install/local_setup.bash
+# 自动 加入到 ~/.bashrc
+source ~/code/realsence_warpper/install/local_setup.bash
+```
+**测试**
+```
+ros2 launch realsense2_camera rs_launch.py 
 ```
 ## 安装其他包
 
@@ -77,64 +103,40 @@ sudo ldconfig   #更新系统的动态链接库共享库缓存
 ```
 
 
-## 安装realsense-ros-wrapper
 
-详情见[realsense搭建指南（同时适用L515/D435i/D455](https://pcn5euai2w60.feishu.cn/wiki/DCzow0AAji3WB0kuEfGc7SIknjh)
-下载4.54.1版本ros2 wrapper：[https://github.com/IntelRealSense/realsense-ros/archive/refs/tags/4.54.1.tar.gz](https://github.com/IntelRealSense/realsense-ros/archive/refs/tags/4.54.1.tar.gz)
-```shell
-#创建一个 ROS2 工作空间
-mkdir -p ~/realsence_warpper/src
-cd ~/realsence_warpper/src/  #解压到此
-cd ~/realsence_warpper
-#安装依赖项
-sudo apt-get install python3-rosdep -y
-sudo rosdep init 
-rosdep update 
-rosdep install -i --from-path src --rosdistro $ROS_DISTRO --skip-keys=librealsense2 -y
-colcon build
-# 手动 source
-. install/local_setup.bash
-# 自动 加入到 ~/.bashrc
-source ~/code/realsence_warpper/install/local_setup.bash
-```
-**测试**
-```
-ros2 run realsense2_camera realsense2_camera_node
-ros2 launch realsense2_camera rs_launch.py camera_name:=camera0 serial_no:=_939622074891 enable_depth:=false rgb_camera.profile:=640x480x30
-```
-
-# 使用说明
+# ACT使用说明
 
 ## 数据采集
 
 ```shell
-cd ~/code/jk_imitation_learning/
 #系统python环境编译
 rm -rf build/ install/ log/
 colcon build
-source install/setup.bash
 
-# 1.机械臂
-ros2 run jk_robot jk_robot_server
-# 2.夹爪
-sudo chmod 777 /dev/ttyUSB0
-ros2 run robotiq robotiq_2F85_server
-# 3.相机
-ros2 launch realsense2_camera rs_launch.py camera_name:=camera0 enable_depth:=false rgb_camera.profile:=640x480x30 
+#一键启动脚本
+bash bash/startall.sh start/stop
+bash bash/startcamera.sh start/stop
 
-ros2 launch realsense2_camera rs_launch.py camera_name:=camera0 serial_no:=_f1370488 enable_depth:=false rgb_camera.profile:=640x480x30
-ros2 launch realsense2_camera rs_launch.py camera_name:=camera1 serial_no:=_203522250889 enable_depth:=false rgb_camera.profile:=640x480x30
-# 4.手柄 
-ros2 launch teleop_twist_joy teleop-launch.py
-
-# 5.数据采集
+# 数据采集
 ros2 run data_sampler data_sampler
-
 ```
+
+操作方式：
+- Y 开始收集
+- upload 结束收集
+- 左摇杆 水平移动
+- 右摇杆 上下移动与旋转
+
+数据可视化
+```shell
+python src/act_plus_plus/act_plus_plus/visualize_episodes.py --dataset_dir /home/haoyue/code/jk_imitation_learning/data/sample/2025-04-06-20-22-44/demo --episode_idx 0
+```
+
 ## 训练
 
 ```
-python imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir training --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --lr 1e-5 --seed 0 --num_steps 2000
-
+python imitate_episodes.py --task_name demo --ckpt_dir training --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --lr 1e-5 --seed 0 --num_steps 2000
 ```
+
+
 

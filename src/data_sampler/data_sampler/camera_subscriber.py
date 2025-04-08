@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.callback_groups import CallbackGroup
 from cv_bridge import CvBridge, CvBridgeError
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 
 import cv2
 import copy
@@ -33,6 +33,15 @@ class CameraSubscriber:
         self.img = None
         self.img_lock = threading.Lock()
         self.rgb_subscriber = None
+        # 深度图像数据
+        self.depth_img = None
+        self.depth_img_lock = threading.Lock()
+        self.depth_subscriber = None
+        
+        # 点云数据
+        self.pointcloud = None
+        self.pointcloud_lock = threading.Lock()
+        self.pointcloud_subscriber = None
 
     def create_rgb_subscriber(self, node:rclpy.node.Node, camera_topic:str,
                               qos_profile: int, callback_group:rclpy.callback_groups.CallbackGroup):
@@ -41,11 +50,37 @@ class CameraSubscriber:
         else:
             self.rgb_subscriber = node.create_subscription(Image, camera_topic, self.img_callback, qos_profile, callback_group=callback_group)
 
+    def create_depth_subscriber(self, node: rclpy.node.Node, depth_topic: str,
+                              qos_profile: int, callback_group: rclpy.callback_groups.CallbackGroup):
+        """创建深度图像订阅者"""
+        self.depth_subscriber = node.create_subscription(
+            Image, depth_topic, self.depth_callback, qos_profile, callback_group=callback_group)
+
+    def create_pointcloud_subscriber(self, node: rclpy.node.Node, pointcloud_topic: str,
+                                   qos_profile: int, callback_group: rclpy.callback_groups.CallbackGroup):
+        """创建点云订阅者"""
+        self.pointcloud_subscriber = node.create_subscription(
+            PointCloud2, pointcloud_topic, self.pointcloud_callback, qos_profile, callback_group=callback_group)
+
     def get_img(self):
         self.img_lock.acquire()
         img = copy.deepcopy(self.img)
         self.img_lock.release()
         return img
+
+    def get_depth_img(self):
+        """获取深度图像"""
+        self.depth_img_lock.acquire()
+        depth_img = copy.deepcopy(self.depth_img)
+        self.depth_img_lock.release()
+        return depth_img
+
+    def get_pointcloud(self):
+        """获取点云数据"""
+        self.pointcloud_lock.acquire()
+        pointcloud = copy.deepcopy(self.pointcloud)
+        self.pointcloud_lock.release()
+        return pointcloud
 
     def img_callback(self, msg):
         img = CvBridge().imgmsg_to_cv2(msg, "bgr8")
@@ -65,6 +100,19 @@ class CameraSubscriber:
                 self.writer = cv2.VideoWriter(self.record_path, fourcc, self.sample_frequency, (img.shape[1], img.shape[0]))
             self.writer.write(img)
         self.if_record_start_lock.release()
+
+    def depth_callback(self, msg):
+        """深度图像回调函数"""
+        depth_img = CvBridge().imgmsg_to_cv2(msg)
+        self.depth_img_lock.acquire()
+        self.depth_img = copy.deepcopy(depth_img)
+        self.depth_img_lock.release()
+
+    def pointcloud_callback(self, msg):
+        """点云数据回调函数"""
+        self.pointcloud_lock.acquire()
+        self.pointcloud = copy.deepcopy(msg)
+        self.pointcloud_lock.release()
 
     def start_record(self, record_path_prefix: str):
         if self.writer is not None:

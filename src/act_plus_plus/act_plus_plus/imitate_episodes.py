@@ -52,14 +52,17 @@ def main(args):
 
     # get task parameters
     # is_sim = task_name[:4] == 'sim_'
+    # is_sim = True
+    # if is_sim or task_name == 'all':
+    #     from constants import SIM_TASK_CONFIGS
+    #     task_config = SIM_TASK_CONFIGS[task_name]
+    # else:
+    #     from aloha_scripts.constants import TASK_CONFIGS
+    #     task_config = TASK_CONFIGS[task_name]
+    
+    from constants import TASK_CONFIGS
+    task_config = TASK_CONFIGS[task_name]
 
-    is_sim = True
-    if is_sim or task_name == 'all':
-        from constants import SIM_TASK_CONFIGS
-        task_config = SIM_TASK_CONFIGS[task_name]
-    else:
-        from aloha_scripts.constants import TASK_CONFIGS
-        task_config = TASK_CONFIGS[task_name]
     dataset_dir = task_config['dataset_dir']
     # num_episodes = task_config['num_episodes']
     episode_len = task_config['episode_len']

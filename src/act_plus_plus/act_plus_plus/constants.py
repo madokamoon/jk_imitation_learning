@@ -5,6 +5,18 @@ import os
 # DATA_DIR = '/home/haoyue/code/jk_imitation_learning/data/sample/2025-04-06-20-55-02' 
 DATA_DIR = '/home/haoyue/code/jk_imitation_learning/src/act_plus_plus/act_plus_plus/data' 
 # DATA_DIR = '/home/haoyue/code/jk_imitation_learning/src/act_plus_plus/act_plus_plus/dataread' 
+
+
+TASK_CONFIGS = {
+    'demo':{
+        'dataset_dir': DATA_DIR + '/demo',
+        'episode_len': 400,
+        'train_ratio': 0.9,
+        'camera_names': ['cam_eye', 'cam_left', 'cam_right']
+    },
+}
+
+
 SIM_TASK_CONFIGS = {
     'sim_transfer_cube_scripted':{
         'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted',

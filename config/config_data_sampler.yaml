@@ -8,8 +8,7 @@ elapsed_time_show: false
 robot_init_pos: &robot_init_pos
   [ 0.093, 0.336, 0.341, -172.385, -1.685, 122.126 ]
 camera_names: &camera_names 
-  # ["camera0", "camera1", "camera2"]
-    ["camera0", "camera1"]
+  ["cam_eye", "cam_right", "cam_left"]
 robot_end_pos: [ -0.170, 0.594, 0.320, -175, -0.3, 147.6 ]
 end_delay: 10
 # 机械臂客户端
@@ -17,28 +16,28 @@ robot_client:
   robot_init_pos: *robot_init_pos
   pos_target_d: 0.0025
   saved_mode: "hdf5"   # 保存模式： json zarr hdf5 
-  prefix: "sim_transfer_cube_scripted"
+  prefix: "demo"
   camera_names: *camera_names
 # XBOX
 xbox_controller:
   sample_frequency: *sample_frequency
 # 相机
 cameras_subscriber:
-  camera0:
+  cam_eye:
     camera_id: 0
     if_record: false
-    sample_frequency: *camera_names
+    sample_frequency: *sample_frequency
     prefix: "videos"
-  camera1:
+  cam_right:
     camera_id: 1
     if_record: false
-    sample_frequency: *camera_names
+    sample_frequency: *sample_frequency
     prefix: "videos"
-  # camera2:
-  #   camera_id: 2
-  #   if_record: true
-  #   sample_frequency: *camera_names
-  #   prefix: "videos"
+  cam_left:
+    camera_id: 2
+    if_record: false
+    sample_frequency: *sample_frequency
+    prefix: "videos"
 
 
 

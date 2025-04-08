@@ -98,8 +98,6 @@ class RobotClient:
             for cam_name in self.camera_names:
                 self.datas[f'/observations/images/{cam_name}'] = []
             print(self.record_path)
-
-
         return True
 
     def stop_sample(self):

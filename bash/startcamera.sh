@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-
-
 if [ "$1" == "start" ]; then
     serials=($(rs-enumerate-devices | grep "Serial Number" | grep -v "Asic" | awk '{print "_"$NF}'))
 
@@ -23,6 +21,9 @@ if [ "$1" == "start" ]; then
             camera_name:=camera$i \
             serial_no:=${serials[$i]} \
             enable_depth:=false \
+            pointcloud.enable:=false \
+            align_depth.enable:=false \
+            depth_module.profile:=640x480x30 \
             rgb_camera.profile:=640x480x30 &
 
         sleep 1  # 给每个节点一点启动时间

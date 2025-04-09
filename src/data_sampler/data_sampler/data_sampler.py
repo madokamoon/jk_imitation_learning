@@ -47,6 +47,7 @@ class DataSampler(Node):
         self.robot_init_pos = np.array(yaml_data["robot_init_pos"])
         self.robot_end_pos = np.array(yaml_data["robot_end_pos"])
         self.end_delay = yaml_data["end_delay"]
+        self.camera_names = yaml_data["camera_names"]
         # 设置回调组
         self.sensors_callback_group = rclpy.callback_groups.ReentrantCallbackGroup()
         self.actions_callback_group = rclpy.callback_groups.ReentrantCallbackGroup()
@@ -66,13 +67,13 @@ class DataSampler(Node):
         self.get_logger().info("机器人客户端 初始化完成")
         # 相机初始化
         self.camera_subscirbers = []
-        cameras_subscriber_config: dict
-        cameras_subscriber_config = yaml_data["cameras_subscriber"]
-        for k, v in cameras_subscriber_config.items():
-            v.update({"camera_name": k})
-            self.camera_subscirbers.append(CameraSubscriber(**v))
-            self.camera_subscirbers[-1].create_rgb_subscriber(self, "/" + k + "/color/image_raw", 5,self.sensors_callback_group)
-            self.get_logger().info(f"""{k} 初始化完成""")
+        # 相机订阅器初始化
+        for camera in self.camera_names:
+            self.camera_subscirbers.append(CameraSubscriber(camera))
+            self.camera_subscirbers[-1].create_rgb_subscriber(self, "/" + camera + "/color/image_raw", 5,self.sensors_callback_group)
+            self.camera_subscirbers[-1].create_depth_subscriber(self, "/" + camera + "/aligned_depth_to_color/image_raw", 5,self.sensors_callback_group)
+            self.camera_subscirbers[-1].create_pointcloud_subscriber(self, "/" + camera + "/depth/color/points", 5,self.sensors_callback_group)
+            self.get_logger().info(f"""{camera} 初始化完成""")
         # XBOX初始化
         xbox_controller_config = yaml_data["xbox_controller"]
         self.xbox_controller = XBOXController(**xbox_controller_config)
@@ -153,15 +154,15 @@ class DataSampler(Node):
                     now_pos[3:6] *= np.pi / 180
                     data["action"] = now_pos.tolist()
 
-                    for camera_subscirber in self.camera_subscirbers:
-                        data[camera_subscirber.camera_name]=camera_subscirber.get_img()
-
+                    for camera_name in self.camera_names:
+                        data[camera_name+"color"]=camera_subscirber.get_img()
+                        data[camera_name+"depth"]=camera_subscirber.get_depth_img()
+                        data[camera_name+"point"]=camera_subscirber.get_pointcloud()
+                        
                     self.robot_client.put_data(data)
                     d_pos = np.linalg.norm(now_pos[0:6] - np.array(target_pos))
                     print("d_pos: {0}, target: {1}".format(d_pos, 0.003))
 
-
-                        
                     if self.img_show:
                         for camera_subscirber in self.camera_subscirbers:
                             img = camera_subscirber.get_img()
@@ -222,8 +223,10 @@ class DataSampler(Node):
                 data["robot_eef_pose"] = end_pos.tolist() + [action[6]]  
                 data["action"] = action.tolist()
                 data["end_vel_command"] = control_command[0:6].tolist()
-                for camera_subscirber in self.camera_subscirbers:
-                    data[camera_subscirber.camera_name]=camera_subscirber.get_img()
+                for camera_name in self.camera_names:
+                    data[camera_name+"color"]=camera_subscirber.get_img()
+                    data[camera_name+"depth"]=camera_subscirber.get_depth_img()
+                    data[camera_name+"point"]=camera_subscirber.get_pointcloud()
                 self.robot_client.put_data(data)
 
             # 处理图片显示

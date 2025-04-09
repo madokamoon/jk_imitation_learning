@@ -13,6 +13,8 @@ import copy
 from enum import Enum
 import h5py
 from .replay_buffer import ReplayBuffer
+import zarr
+from termcolor import cprint
 
 class Mode(Enum):
     ENDPOS  = 6
@@ -65,17 +67,26 @@ class RobotClient:
             self.record_path = str(record_path)
             print(self.record_path)
         elif self.saved_mode == "zarr":
-            if self.replay_buffer is None:
-                if not self.prefix == "":
-                    record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
-                else:
-                    record_path = pathlib.Path(record_path_prefix)
-                zarr_path = pathlib.Path(str(record_path), 'replay_buffer.zarr')
-                self.replay_buffer = ReplayBuffer.create_from_path(
-                            zarr_path=zarr_path, mode='a')
-                for k, v in self.replay_buffer.items():
-                    self.datas[k] = np.array(v).tolist()
-            print("第 {0} 次运行".format(self.replay_buffer.n_episodes))
+            if not self.prefix == "":
+                record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
+            else:
+                record_path = pathlib.Path(record_path_prefix)
+
+            if record_path.exists():
+                epoch = len(list(record_path.glob("*")))
+            record_path = record_path.joinpath(f"episode_{str(epoch)}.zarr")  
+            record_path.parent.mkdir(parents=True, exist_ok=True)
+            self.record_path = str(record_path)
+
+            # 初始化数据收集字典
+            self.datas = {
+                'img': [],  # RGB图像
+                'state': [],  # 机器人状态
+                'point_cloud': [],  # 点云数据
+                'depth': [],  # 深度图像
+                'action': [],  # 动作
+                'episode_ends': []  # 轨迹结束标记
+            }
 
         elif self.saved_mode == "hdf5":
             # 处理文件路径
@@ -97,6 +108,7 @@ class RobotClient:
             }
             for cam_name in self.camera_names:
                 self.datas[f'/observations/images/{cam_name}'] = []
+
             print(self.record_path)
         return True
 
@@ -107,9 +119,54 @@ class RobotClient:
             self.datas.clear()
             self.data_id = 0
         elif self.saved_mode == "zarr":
-            for k, v in self.datas.items():
-                self.datas[k] = np.array(self.datas[k])
-            self.replay_buffer.add_episode(self.datas, compressors='disk')
+            # 创建zarr根组和子组
+            zarr_root = zarr.group(self.record_path)
+            zarr_data = zarr_root.create_group('data')
+            zarr_meta = zarr_root.create_group('meta')
+
+            # 将列表数据转换为numpy数组
+            img_arrays = np.stack(self.datas['img'], axis=0)
+            if img_arrays.shape[1] == 3:  # 确保通道在最后
+                img_arrays = np.transpose(img_arrays, (0,2,3,1))
+            state_arrays = np.stack(self.datas['state'], axis=0)
+            point_cloud_arrays = np.stack(self.datas['point_cloud'], axis=0)
+            depth_arrays = np.stack(self.datas['depth'], axis=0)
+            action_arrays = np.stack(self.datas['action'], axis=0)
+            episode_ends_arrays = np.array(self.datas['episode_ends'])
+
+            # 设置压缩器
+            compressor = zarr.Blosc(cname='zstd', clevel=3, shuffle=1)
+
+            # 设置分块大小
+            img_chunk_size = (100, img_arrays.shape[1], img_arrays.shape[2], img_arrays.shape[3])
+            state_chunk_size = (100, state_arrays.shape[1])
+            point_cloud_chunk_size = (100, point_cloud_arrays.shape[1], point_cloud_arrays.shape[2])
+            depth_chunk_size = (100, depth_arrays.shape[1], depth_arrays.shape[2])
+            action_chunk_size = (100, action_arrays.shape[1])
+
+            # 创建数据集
+            zarr_data.create_dataset('img', data=img_arrays, chunks=img_chunk_size, 
+                                    dtype='uint8', compressor=compressor)
+            zarr_data.create_dataset('state', data=state_arrays, chunks=state_chunk_size, 
+                                    dtype='float32', compressor=compressor)
+            zarr_data.create_dataset('point_cloud', data=point_cloud_arrays, 
+                                    chunks=point_cloud_chunk_size, dtype='float32', compressor=compressor)
+            zarr_data.create_dataset('depth', data=depth_arrays, chunks=depth_chunk_size, 
+                                    dtype='float32', compressor=compressor)
+            zarr_data.create_dataset('action', data=action_arrays, chunks=action_chunk_size, 
+                                    dtype='float32', compressor=compressor)
+            zarr_meta.create_dataset('episode_ends', data=episode_ends_arrays, dtype='int64', 
+                                    compressor=compressor)
+
+            # 打印数据形状信息
+            cprint(f'img shape: {img_arrays.shape}, range: [{np.min(img_arrays)}, {np.max(img_arrays)}]', 'green')
+            cprint(f'point_cloud shape: {point_cloud_arrays.shape}, range: [{np.min(point_cloud_arrays)}, {np.max(point_cloud_arrays)}]', 'green')
+            cprint(f'depth shape: {depth_arrays.shape}, range: [{np.min(depth_arrays)}, {np.max(depth_arrays)}]', 'green')
+            cprint(f'state shape: {state_arrays.shape}, range: [{np.min(state_arrays)}, {np.max(state_arrays)}]', 'green')
+            cprint(f'action shape: {action_arrays.shape}, range: [{np.min(action_arrays)}, {np.max(action_arrays)}]', 'green')
+            cprint(f'Saved zarr file to {self.record_path}', 'green')
+
+            # 清理数据
             self.datas.clear()
             self.epoch += 1
 

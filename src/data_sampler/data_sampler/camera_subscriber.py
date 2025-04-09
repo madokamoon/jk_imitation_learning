@@ -15,7 +15,7 @@ import time
 # L系列硬件太老需要微调SDK版本到2.4.2，默认ROS2 Humble不支持。
 # ROS2 Humble下使用，只支持RGB流采集
 class CameraSubscriber:
-    def __init__(self, camera_name: str = "camera", camera_id: int = 0, if_record: bool = False, sample_frequency: float = 1, prefix: str = "videos"):
+    def __init__(self, camera_name: str = "camera", camera_id: int = 0, if_record: bool = False, sample_frequency: float = 30, prefix: str = "videos"):
         # 录制相关
         self.epoch = 0
         self.if_record = if_record
@@ -37,7 +37,6 @@ class CameraSubscriber:
         self.depth_img = None
         self.depth_img_lock = threading.Lock()
         self.depth_subscriber = None
-        
         # 点云数据
         self.pointcloud = None
         self.pointcloud_lock = threading.Lock()

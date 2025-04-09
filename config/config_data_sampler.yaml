@@ -6,7 +6,7 @@ record_prefix_path: "data"
 image_show: false
 elapsed_time_show: false
 robot_init_pos: &robot_init_pos
-  [ 0.093, 0.336, 0.341, -172.385, -1.685, 122.126 ]
+  [ 0.093, 0.336, 0.341, -172.385, -1.685, 0 ]
 camera_names: &camera_names 
   ["cam_eye", "cam_right", "cam_left"]
 robot_end_pos: [ -0.170, 0.594, 0.320, -175, -0.3, 147.6 ]
@@ -19,25 +19,26 @@ robot_client:
   prefix: "demo"
   camera_names: *camera_names
 # XBOX
+
 xbox_controller:
   sample_frequency: *sample_frequency
 # 相机
-cameras_subscriber:
-  cam_eye:
-    camera_id: 0
-    if_record: false
-    sample_frequency: *sample_frequency
-    prefix: "videos"
-  cam_right:
-    camera_id: 1
-    if_record: false
-    sample_frequency: *sample_frequency
-    prefix: "videos"
-  cam_left:
-    camera_id: 2
-    if_record: false
-    sample_frequency: *sample_frequency
-    prefix: "videos"
+# cameras_subscriber:
+#   cam_eye:
+#     camera_id: 0
+#     if_record: false
+#     sample_frequency: *sample_frequency
+#     prefix: "videos"
+#   cam_right:
+#     camera_id: 1
+#     if_record: false
+#     sample_frequency: *sample_frequency
+#     prefix: "videos"
+#   cam_left:
+#     camera_id: 2
+#     if_record: false
+#     sample_frequency: *sample_frequency
+#     prefix: "videos"
 
 
 

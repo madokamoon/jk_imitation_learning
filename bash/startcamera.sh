@@ -33,9 +33,9 @@ if [ "$1" == "start" ]; then
         ros2 launch realsense2_camera rs_launch.py \
             camera_name:=$camera_name \
             serial_no:="_$serial" \
-            enable_depth:=false \
-            pointcloud.enable:=false \
-            align_depth.enable:=false \
+            enable_depth:=true \
+            pointcloud.enable:=true \
+            align_depth.enable:=true \
             depth_module.profile:=640x480x30 \
             rgb_camera.profile:=640x480x30 &
 

@@ -6,10 +6,10 @@ record_prefix_path: "data"
 image_show: false
 elapsed_time_show: false
 robot_init_pos: &robot_init_pos
-  [ 0.093, 0.336, 0.341, -172.385, -1.685, 122.126 ]
+  [ 0.036, 0.639, 0.361, -174.882, -0.967, 4.658 ]
 camera_names: &camera_names 
   ["cam_eye", "cam_right", "cam_left"]
-robot_end_pos: [ -0.170, 0.594, 0.320, -175, -0.3, 147.6 ]
+robot_end_pos: [ -0.254, 0.628, 0.179, -171.285, -0.955 , 2.454 ]
 end_delay: 10
 # 机械臂客户端
 robot_client:

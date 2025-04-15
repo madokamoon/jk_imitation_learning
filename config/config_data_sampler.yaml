@@ -8,7 +8,7 @@ elapsed_time_show: false
 robot_init_pos: &robot_init_pos
   [ 0.036, 0.639, 0.361, -174.882, -0.967, 4.658 ]
 camera_names: &camera_names 
-  ["cam_eye", "cam_right", "cam_left"]
+  ["camera0", "camera1", "camera2"]
 robot_end_pos: [ -0.254, 0.628, 0.179, -171.285, -0.955 , 2.454 ]
 end_delay: 10
 # 机械臂客户端
@@ -23,17 +23,17 @@ xbox_controller:
   sample_frequency: *sample_frequency
 # 相机
 cameras_subscriber:
-  cam_eye:
+  camera0:
     camera_id: 0
     if_record: false
     sample_frequency: *sample_frequency
     prefix: "videos"
-  cam_right:
+  camera1:
     camera_id: 1
     if_record: false
     sample_frequency: *sample_frequency
     prefix: "videos"
-  cam_left:
+  camera2:
     camera_id: 2
     if_record: false
     sample_frequency: *sample_frequency

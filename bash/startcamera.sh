@@ -2,9 +2,10 @@
 
 # 对照表
 declare -A serial_to_name=(
-    ["203522250889"]="cam_eye"
-    ["f1370488"]="cam_right"
-    ["939622074891"]="cam_left"
+    ["939622074891"]="camera0"
+    ["203522250889"]="camera1"
+    ["f1370488"]="camera2"
+
 )
 
 if [ "$1" == "start" ]; then
@@ -24,7 +25,7 @@ if [ "$1" == "start" ]; then
     started_cameras=()
     for i in "${!serials[@]}"; do
         serial=${serials[$i]}
-        camera_name="camera$i"  # 默认名称
+        # camera_name="camera$i"  # 默认名称
         if [[ -n "${serial_to_name[$serial]}" ]]; then
             camera_name="${serial_to_name[$serial]}"  
         fi
@@ -38,6 +39,10 @@ if [ "$1" == "start" ]; then
             align_depth.enable:=false \
             depth_module.profile:=640x480x30 \
             rgb_camera.profile:=640x480x30 &
+
+        ros2 param set /$camera_name/$camera_name rgb_camera.enable_auto_exposure 0
+        ros2 param set /$camera_name/$camera_name rgb_camera.exposure 300
+        ros2 param set /$camera_name/$camera_name rgb_camera.gain 30
 
         sleep 1 
 

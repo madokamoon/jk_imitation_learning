@@ -44,7 +44,7 @@ def main():
     assert(history_len + future_len >= prediction_len)
     assert(future_len % prediction_len == 0)
 
-    wandb.init(project="mobile-aloha2", reinit=True, entity="mobile-aloha2", name=expr_name) # mode='disabled', 
+    wandb.init(project="mobile-aloha2", reinit=True, entity="moonllx1175", name=expr_name) # mode='disabled', 
 
     if not os.path.isdir(ckpt_dir):
         os.makedirs(ckpt_dir)

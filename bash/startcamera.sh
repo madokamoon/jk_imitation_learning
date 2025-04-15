@@ -39,7 +39,7 @@ if [ "$1" == "start" ]; then
             depth_module.profile:=640x480x30 \
             rgb_camera.profile:=640x480x30 &
 
-        sleep 1  # 给每个节点一点启动时间
+        sleep 1 
 
         # 记录已启动的摄像头信息
         started_cameras+=("$serial:$camera_name")

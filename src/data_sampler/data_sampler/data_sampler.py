@@ -157,7 +157,7 @@ class DataSampler(Node):
                     for camera_name in self.camera_names:
                         data[camera_name+"color"]=camera_subscirber.get_img()
                         data[camera_name+"depth"]=camera_subscirber.get_depth_img()
-                        data[camera_name+"point"]=camera_subscirber.get_pointcloud()
+                        # data[camera_name+"point"]=camera_subscirber.get_pointcloud()
                         
                     self.robot_client.put_data(data)
                     d_pos = np.linalg.norm(now_pos[0:6] - np.array(target_pos))
@@ -226,7 +226,7 @@ class DataSampler(Node):
                 for camera_name in self.camera_names:
                     data[camera_name+"color"]=camera_subscirber.get_img()
                     data[camera_name+"depth"]=camera_subscirber.get_depth_img()
-                    data[camera_name+"point"]=camera_subscirber.get_pointcloud()
+                    # data[camera_name+"point"]=camera_subscirber.get_pointcloud()
                 self.robot_client.put_data(data)
 
             # 处理图片显示

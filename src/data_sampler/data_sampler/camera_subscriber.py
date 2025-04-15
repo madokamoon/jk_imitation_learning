@@ -2,14 +2,15 @@ import rclpy
 from rclpy.callback_groups import CallbackGroup
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, PointCloud2
-
+from sensor_msgs_py import point_cloud2
+import struct
 import cv2
 import copy
 import threading
 import pathlib
 import shutil
 import time
-
+import numpy as np
 
 # 硬件只支持D系列 Realsense 相机，
 # L系列硬件太老需要微调SDK版本到2.4.2，默认ROS2 Humble不支持。
@@ -74,12 +75,45 @@ class CameraSubscriber:
         self.depth_img_lock.release()
         return depth_img
 
+
+
     def get_pointcloud(self):
-        """获取点云数据"""
+        """获取点云数据，并返回包含颜色信息的6维数据 (x, y, z, r, g, b)"""
         self.pointcloud_lock.acquire()
-        pointcloud = copy.deepcopy(self.pointcloud)
+        msg = copy.deepcopy(self.pointcloud)
         self.pointcloud_lock.release()
-        return pointcloud
+        if msg is None:
+            return None
+
+        # 转换为numpy数组
+        pc_points = []
+        for point in point_cloud2.read_points(msg, 
+                                            field_names=("x", "y", "z", "rgb"),
+                                            skip_nans=True):
+            # 提取 x, y, z 坐标
+            x, y, z, rgb = point
+            
+            # 解码 RGB 颜色值
+            # 将浮点数解包为整数
+            rgb_int = struct.unpack('I', struct.pack('f', rgb))[0]
+            r = (rgb_int >> 16) & 0x0000ff  # 提取红色分量
+            g = (rgb_int >> 8) & 0x0000ff   # 提取绿色分量
+            b = rgb_int & 0x0000ff          # 提取蓝色分量
+            
+            # 归一化颜色值到 [0, 1] 范围（可选）
+            r, g, b = r / 255.0, g / 255.0, b / 255.0
+            
+            # 添加到点云数据中
+            pc_points.append([x, y, z, r, g, b])
+        
+        # 返回6维点云数据
+        return np.array(pc_points)
+
+        # self.pointcloud_lock.acquire()
+        # pointcloud = copy.deepcopy(self.pointcloud)
+        # print(f"frame___pointcloud: {pointcloud}")
+        # self.pointcloud_lock.release()
+        # return pointcloud
 
     def img_callback(self, msg):
         img = CvBridge().imgmsg_to_cv2(msg, "bgr8")

@@ -33,9 +33,9 @@ if [ "$1" == "start" ]; then
         ros2 launch realsense2_camera rs_launch.py \
             camera_name:=$camera_name \
             serial_no:="_$serial" \
-            enable_depth:=true \
-            pointcloud.enable:=true \
-            align_depth.enable:=true \
+            enable_depth:=false \
+            pointcloud.enable:=false \
+            align_depth.enable:=false \
             depth_module.profile:=640x480x30 \
             rgb_camera.profile:=640x480x30 &
 
@@ -48,6 +48,8 @@ if [ "$1" == "start" ]; then
     echo "🎉 总计 ${#serials[@]} 个摄像头节点已启动！"
     for cam_info in "${started_cameras[@]}"; do
         echo "  已启动摄像头节点：$cam_info"
+    echo "启动话题：" 
+    ros2 topic list | grep "cam"
     done
 
 elif [ "$1" == "stop" ]; then

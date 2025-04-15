@@ -14,7 +14,6 @@ from enum import Enum
 import h5py
 from .replay_buffer import ReplayBuffer
 import zarr
-from termcolor import cprint
 
 class Mode(Enum):
     ENDPOS  = 6
@@ -34,7 +33,7 @@ class RobotClient:
         self.jk_robot_client = None
 
         # 数据采样
-        assert saved_mode == "json" or saved_mode == "zarr" or saved_mode == "hdf5"
+        assert saved_mode == "json"  or saved_mode == "hdf5" or saved_mode == "dp3"
         self.data_id = 0
         self.epoch = 0
         self.datas = {}
@@ -66,12 +65,12 @@ class RobotClient:
             record_path.parent.mkdir(parents=True, exist_ok=True)
             self.record_path = str(record_path)
             print(self.record_path)
-        elif self.saved_mode == "zarr":
+        elif self.saved_mode == "dp3":
             if not self.prefix == "":
                 record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
             else:
                 record_path = pathlib.Path(record_path_prefix)
-
+            epoch = 0
             if record_path.exists():
                 epoch = len(list(record_path.glob("*")))
             record_path = record_path.joinpath(f"episode_{str(epoch)}.zarr")  
@@ -118,20 +117,20 @@ class RobotClient:
                 json.dump(self.datas, json_file, indent=4)
             self.datas.clear()
             self.data_id = 0
-        elif self.saved_mode == "zarr":
+        elif self.saved_mode == "dp3":
             # 创建zarr根组和子组
             zarr_root = zarr.group(self.record_path)
             zarr_data = zarr_root.create_group('data')
             zarr_meta = zarr_root.create_group('meta')
 
             # 将列表数据转换为numpy数组
-            img_arrays = np.stack(self.datas['img'], axis=0)
+            img_arrays = np.array(self.datas['img'])
             if img_arrays.shape[1] == 3:  # 确保通道在最后
                 img_arrays = np.transpose(img_arrays, (0,2,3,1))
-            state_arrays = np.stack(self.datas['state'], axis=0)
-            point_cloud_arrays = np.stack(self.datas['point_cloud'], axis=0)
-            depth_arrays = np.stack(self.datas['depth'], axis=0)
-            action_arrays = np.stack(self.datas['action'], axis=0)
+            state_arrays = np.array(self.datas['state'])
+            point_cloud_arrays = np.array(self.datas['point_cloud'])
+            depth_arrays = np.array(self.datas['depth'])
+            action_arrays = np.array(self.datas['action'])
             episode_ends_arrays = np.array(self.datas['episode_ends'])
 
             # 设置压缩器
@@ -159,12 +158,12 @@ class RobotClient:
                                     compressor=compressor)
 
             # 打印数据形状信息
-            cprint(f'img shape: {img_arrays.shape}, range: [{np.min(img_arrays)}, {np.max(img_arrays)}]', 'green')
-            cprint(f'point_cloud shape: {point_cloud_arrays.shape}, range: [{np.min(point_cloud_arrays)}, {np.max(point_cloud_arrays)}]', 'green')
-            cprint(f'depth shape: {depth_arrays.shape}, range: [{np.min(depth_arrays)}, {np.max(depth_arrays)}]', 'green')
-            cprint(f'state shape: {state_arrays.shape}, range: [{np.min(state_arrays)}, {np.max(state_arrays)}]', 'green')
-            cprint(f'action shape: {action_arrays.shape}, range: [{np.min(action_arrays)}, {np.max(action_arrays)}]', 'green')
-            cprint(f'Saved zarr file to {self.record_path}', 'green')
+            print(f'img shape: {img_arrays.shape}, range: [{np.min(img_arrays)}, {np.max(img_arrays)}]')
+            print(f'point_cloud shape: {point_cloud_arrays.shape}, range: [{np.min(point_cloud_arrays)}, {np.max(point_cloud_arrays)}]')
+            print(f'depth shape: {depth_arrays.shape}, range: [{np.min(depth_arrays)}, {np.max(depth_arrays)}]')
+            print(f'state shape: {state_arrays.shape}, range: [{np.min(state_arrays)}, {np.max(state_arrays)}]')
+            print(f'action shape: {action_arrays.shape}, range: [{np.min(action_arrays)}, {np.max(action_arrays)}]')
+            print(f'Saved zarr file to {self.record_path}')
 
             # 清理数据
             self.datas.clear()
@@ -194,11 +193,7 @@ class RobotClient:
         if self.saved_mode == "json":
             self.datas[str(self.data_id)] = copy.deepcopy(data)
             self.data_id += 1
-        elif self.saved_mode == "zarr":
-            for k, v in data.items():
-                if k not in self.datas.keys():
-                    self.datas[k] = []
-                self.datas[k].append(v)
+
         elif self.saved_mode == "hdf5":
             self.datas['/observations/qpos'].append(data["robot_eef_pose"])
             end_vel_command_expend_to_seven = data['end_vel_command'] + [data['action'][6]] # 爪子速度定义为命令吗，act中爪子不是二变量
@@ -206,6 +201,19 @@ class RobotClient:
             self.datas['/action'].append(data['action'])
             for cam_name in self.camera_names:
                 self.datas[f'/observations/images/{cam_name}'].append(data[cam_name])
+        elif self.saved_mode == "dp3":
+            # 存储RGB图像
+            self.datas['img'].append(data["cam_eye"+"color"])
+            # 存储机器人状态
+            self.datas['state'].append(data["robot_eef_pose"])
+            # 存储点云数据
+            self.datas['point_cloud'].append(data["cam_eye"+"point"])
+            # 存储深度图像
+            self.datas['depth'].append(data["cam_eye"+"depth"])
+            # 存储动作
+            self.datas['action'].append(data["action"])
+            # 存储轨迹结束标记 (如果没有则默认为0)
+            self.datas['episode_ends'].append(data.get("episode_ends", 0))
 
 
     def delete_sampled_datas(self):

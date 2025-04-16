@@ -3,157 +3,32 @@ from rclpy.callback_groups import CallbackGroup
 from rclpy.client import Client
 from jk_robot_msgs.srv import StrFuncCommand
 
+
 import json
 import numpy as np
 from typing import Union
 import time
-import pathlib
-import threading
 import copy
 from enum import Enum
-import h5py
-from .replay_buffer import ReplayBuffer
+
 
 class Mode(Enum):
     ENDPOS  = 6
     ENDVEL  = 5
 
 class RobotClient:
-    def __init__(self, robot_init_pos: list, pos_target_d: float = 0.003, saved_mode: str = "json", prefix: str = "robot_states", camera_names: list = ["camera0", "camera1", "camera2"]):
+    def __init__(self, robot_init_pos: list, pos_target_d: float = 0.003):
         # 机器人初始化参数
         assert len(robot_init_pos) == 6
         self.robot_init_pos = np.array(robot_init_pos)
         self.pos_target_d = pos_target_d
 
-        # 夹爪初始化参数
-        self.gripper_client = None
-
         # 机械臂客户端初始化参数
         self.jk_robot_client = None
-
-        # 数据采样
-        assert saved_mode == "json" or saved_mode == "zarr" or saved_mode == "hdf5"
-        self.data_id = 0
-        self.epoch = 0
-        self.datas = {}
-        self.camera_names = camera_names
-        self.saved_mode = saved_mode
-        self.prefix = prefix
-        self.record_path = ""
-        self.replay_buffer = None
 
     def create_robot_client(self, node: rclpy.node.Node, server_name: str,
                             callback_group: rclpy.callback_groups.CallbackGroup):
         self.jk_robot_client = node.create_client(StrFuncCommand, server_name, callback_group=callback_group)
-
-    def create_gripper_client(self, node: rclpy.node.Node, server_name: str,
-                              callback_group: rclpy.callback_groups.CallbackGroup):
-        self.gripper_client = node.create_client(StrFuncCommand, server_name, callback_group=callback_group)
-
-    def start_sample(self, record_path_prefix: str):
-        if self.saved_mode == "json":
-            # 处理文件路径
-            if not self.prefix == "":
-                record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
-            else:
-                record_path = pathlib.Path(record_path_prefix)
-            epoch = 0
-            if record_path.exists():
-                epoch = len(list(record_path.glob("*")))
-            record_path = record_path.joinpath(f"{str(epoch)}.json")
-            record_path.parent.mkdir(parents=True, exist_ok=True)
-            self.record_path = str(record_path)
-            print(self.record_path)
-        elif self.saved_mode == "zarr":
-            if self.replay_buffer is None:
-                if not self.prefix == "":
-                    record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
-                else:
-                    record_path = pathlib.Path(record_path_prefix)
-                zarr_path = pathlib.Path(str(record_path), 'replay_buffer.zarr')
-                self.replay_buffer = ReplayBuffer.create_from_path(
-                            zarr_path=zarr_path, mode='a')
-                for k, v in self.replay_buffer.items():
-                    self.datas[k] = np.array(v).tolist()
-            print("第 {0} 次运行".format(self.replay_buffer.n_episodes))
-
-        elif self.saved_mode == "hdf5":
-            # 处理文件路径
-            if not self.prefix == "":
-                record_path = pathlib.Path(record_path_prefix).joinpath(self.prefix)
-            else:
-                record_path = pathlib.Path(record_path_prefix)
-            epoch = 0
-            if record_path.exists():
-                epoch = len(list(record_path.glob("*")))
-            record_path = record_path.joinpath(f"episode_{str(epoch)}.hdf5")  
-            record_path.parent.mkdir(parents=True, exist_ok=True)
-            self.record_path = str(record_path)
-            # 初始化数据字典
-            self.datas = {
-                '/observations/qpos': [],
-                '/observations/qvel': [],
-                '/action': [],
-            }
-            for cam_name in self.camera_names:
-                self.datas[f'/observations/images/{cam_name}'] = []
-            print(self.record_path)
-        return True
-
-    def stop_sample(self):
-        if self.saved_mode == "json":
-            with open(self.record_path, 'w') as json_file:
-                json.dump(self.datas, json_file, indent=4)
-            self.datas.clear()
-            self.data_id = 0
-        elif self.saved_mode == "zarr":
-            for k, v in self.datas.items():
-                self.datas[k] = np.array(self.datas[k])
-            self.replay_buffer.add_episode(self.datas, compressors='disk')
-            self.datas.clear()
-            self.epoch += 1
-
-        elif self.saved_mode == "hdf5":
-            # 根据存入数据大小设置读取缓存 ACT中图像大小为(480, 640, 3) 设置为2MB
-            max_timesteps = len(self.datas['/action'])
-            with h5py.File(self.record_path, 'w', rdcc_nbytes=1024 ** 2 * 2) as root:
-                # 设置全局参数
-                root.attrs['sim'] = False
-                obs = root.create_group('observations')
-                image = obs.create_group('images')
-                for cam_name in self.camera_names:
-                    _ = image.create_dataset(cam_name, (max_timesteps, 480, 640, 3), dtype='uint8',chunks=(1, 480, 640, 3), )
-                qpos = obs.create_dataset('qpos', (max_timesteps, 7))
-                qvel = obs.create_dataset('qvel', (max_timesteps, 7))
-                action = root.create_dataset('action', (max_timesteps, 7))
-                # 存入数据
-                for name, array in self.datas.items():
-                    root[name][...] = array
-            self.datas.clear()
-
-
-
-    def put_data(self, data: dict):
-        if self.saved_mode == "json":
-            self.datas[str(self.data_id)] = copy.deepcopy(data)
-            self.data_id += 1
-        elif self.saved_mode == "zarr":
-            for k, v in data.items():
-                if k not in self.datas.keys():
-                    self.datas[k] = []
-                self.datas[k].append(v)
-        elif self.saved_mode == "hdf5":
-            self.datas['/observations/qpos'].append(data["robot_eef_pose"])
-            end_vel_command_expend_to_seven = data['end_vel_command'] + [data['action'][6]] # 爪子速度定义为命令吗，act中爪子不是二变量
-            self.datas['/observations/qvel'].append(end_vel_command_expend_to_seven)
-            self.datas['/action'].append(data['action'])
-            for cam_name in self.camera_names:
-                self.datas[f'/observations/images/{cam_name}'].append(data[cam_name])
-
-
-    def delete_sampled_datas(self):
-        self.datas.clear()
-        self.data_id = 0
 
     # 指令相关
     def send_command(self, client: Client, func_name: str, args: str, func_return: dict):
@@ -173,27 +48,6 @@ class RobotClient:
         func_return.update(json.loads(result.func_return))
         return True
 
-    def send_command2gripper(self, func_name: str, args: str, func_return: dict) -> bool:
-        return self.send_command(self.gripper_client, func_name, args, func_return)
-
-    def open_gripper(self, blocking: bool = False) -> bool:
-        func_name = "open_gripper"
-        args_to_send = {
-            "blocking": blocking
-        }
-        func_return = {}
-        success = self.send_command2gripper(func_name, json.dumps(args_to_send), func_return)
-        return success and func_return["success"]
-
-    def close_gripper(self, blocking: bool = False) -> bool:
-        func_name = "close_gripper"
-        args_to_send = {
-            "blocking": blocking
-        }
-        func_return = {}
-        success = self.send_command2gripper(func_name, json.dumps(args_to_send), func_return)
-        return success and func_return["success"]
-
     def send_command2jk(self, func_name: str, args: str, func_return: dict) -> bool:
         return self.send_command(self.jk_robot_client, func_name, args, func_return)
 
@@ -212,7 +66,7 @@ class RobotClient:
             now_end_pos = copy.deepcopy(self.get_end_pos())
             now_end_pos[3:6] *= np.pi / 180
             d_pos = np.linalg.norm(now_end_pos - robot_init_pos)
-            print("d_pos: {0}, target: {1}".format(d_pos, self.pos_target_d))
+            print("d_pos: {0}, target: {1}".format(d_pos, self.pos_target_d), end='\r')
         return True
 
     def get_end_pos(self) -> Union[np.ndarray, None]:

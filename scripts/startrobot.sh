@@ -7,9 +7,7 @@ if [ "$1" == "start" ]; then
     echo "机械臂启动"
     sleep 2
     sudo chmod 777 /dev/ttyUSB0
-    ros2 run robotiq robotiq_2F85_server &
-    echo "夹爪启动"
-    # sleep 2
+    sleep 2
     # ros2 launch teleop_twist_joy teleop-launch.py &
     # echo "手柄启动"
 elif [ "$1" == "stop" ]; then

@@ -1,0 +1,23 @@
+# 基础设置
+sample_frequency: &sample_frequency 20
+sample_prefix_path: "data/sample"
+go_on_path: "test"
+image_show: false
+elapsed_time_show: false
+robot_init_pos: &robot_init_pos [ 0.036, 0.639, 0.361, -174.882, -0.967, 4.658 ]
+robot_end_pos: [ -0.263, 0.630, 0.284, -176.069, 1.023, 0.218]
+end_delay: 10
+pos_target_d: &pos_target_d 0.0025
+# 机械臂客户端
+robot_client:
+  robot_init_pos: *robot_init_pos
+  pos_target_d: *pos_target_d
+# XBOX
+xbox_controller:
+  sample_frequency: *sample_frequency
+# 不设置相机
+camera_names: []
+
+
+
+

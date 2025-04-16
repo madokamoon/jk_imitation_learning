@@ -8,6 +8,7 @@ import argparse
 from PIL import Image
 import numpy as np
 import time
+from collections import deque
 
 root_path = pathlib.Path(__file__).parent.parent
 
@@ -151,6 +152,19 @@ info_text = axs[3, 1].text(0.5, 0.5, '', ha='center', va='center', fontsize=12)
 # 图像对象列表（用于更新）
 img_objects = [None, None, None]
 
+time_diffs = deque(maxlen=4)
+frame_rates = deque(maxlen=4)
+last_timestamp = None
+
+# 在全局变量区域添加新的变量（在time_diffs定义之前）
+first_timestamp = None
+max_frame_rate = 0
+min_frame_rate = float('inf')
+total_frame_rate = 0
+frame_count = 0
+max_frame_rate_idx = 0  # 记录最大帧率对应的帧编号
+min_frame_rate_idx = 0  # 记录最小帧率对应的帧编号
+
 def update(frame):
     if frame < len(keys):
         key = keys[frame]
@@ -174,8 +188,8 @@ def update(frame):
                 img_path = camera_folders[i] / f"{key}.png"
                 if img_path.exists():
                     # 清除之前的图像
-                    if img_objects[i] is not None:
-                        img_objects[i].remove()
+                    # if img_objects[i] is not None:
+                    #     img_objects[i].remove()
                     
                     # 读取并显示新图像
                     img = plt.imread(img_path)
@@ -183,8 +197,47 @@ def update(frame):
                     axs[i, 1].set_title(f"{show_image[i]} - Frame {key}")
         
         # 更新右侧第四个图（信息显示）
-        info_str = f"Frame: {key}\nTimestamp: {timestamp}"
+        global last_timestamp, first_timestamp, max_frame_rate, min_frame_rate, total_frame_rate, frame_count, max_frame_rate_idx, min_frame_rate_idx
+        
+        # 初始化第一帧时间戳
+        if first_timestamp is None and timestamp is not None:
+            first_timestamp = timestamp
+        
+        if timestamp is not None and last_timestamp is not None:
+            time_diff = timestamp - last_timestamp
+            frame_rate = 1.0 / time_diff if time_diff > 0 else 0
+            
+            # 更新统计信息
+            if frame_rate > 0:
+                if frame_rate > max_frame_rate:
+                    max_frame_rate = frame_rate
+                    max_frame_rate_idx = frame
+                if frame_rate < min_frame_rate:
+                    min_frame_rate = frame_rate
+                    min_frame_rate_idx = frame
+                total_frame_rate += frame_rate
+                frame_count += 1
+            
+            time_diffs.append(round(time_diff, 4))
+            frame_rates.append(round(frame_rate, 2))
+        
+        # 构建显示字符串
+        current_time = timestamp - first_timestamp if first_timestamp is not None else 0
+        avg_frame_rate = total_frame_rate / frame_count if frame_count > 0 else 0
+        
+        info_str = f"Frame: {key}\nTimestamp: {timestamp}\n"
+        info_str += f"Current Time: {current_time:.2f}s\n"
+        info_str += f"Max FPS: {max_frame_rate:.2f} (Frame {max_frame_rate_idx})\n"
+        info_str += f"Min FPS: {min_frame_rate:.2f} (Frame {min_frame_rate_idx})\n"
+        info_str += f"Avg FPS: {avg_frame_rate:.2f} (Total {frame_count} frames)\n\n"
+        
+        # 使用enumerate获取实际的帧序号，存储在time_diffs和frame_rates中的最近4个帧的统计信息
+        frame_history = list(range(max(0, frame-len(time_diffs)), frame))
+        for frame_idx, (td, fr) in zip(frame_history, zip(time_diffs, frame_rates)):
+            info_str += f"{frame_idx:5d} | {td:7.4f} | {fr:7.2f}\n"
+        
         info_text.set_text(info_str)
+        last_timestamp = timestamp
         
         print(f"Frame {frame}: key = {key}, timestamp = {timestamp}")
     

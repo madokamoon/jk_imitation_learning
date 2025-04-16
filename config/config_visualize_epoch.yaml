@@ -1,11 +1,16 @@
-
 datapath: "data/sample/test"
 
 show_data:
   robot_state: [0,1,2,3,4,5]
   robot_vel_command: [0,1,2,3,4,5]
   robot_action: [0,1,2,3,4,5]
-  
 
-show_image: ["camera0", "camera1", "camera2"]
+# show_data:
+  # robot_state: [0,1,2,3,4,5]
+  # robot_vel_command: [0,1,2,3,4,5]
+  # robot_action: [0,1,2,3,4,5]
 
+
+show_image: []
+# show_image: ["camera0"]
+# show_image: ["camera0", "camera1", "camera2"]

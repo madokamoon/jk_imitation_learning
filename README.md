@@ -89,54 +89,48 @@ make -j12
 sudo make install
 ```
  
-## 安装 robotiq-gripper-interface 
-
-安装包：installfiles/robotiq-gripper-interface 
-```bash
-mkdir build && cd build
-cmake ..
-make -j12
-sudo make install
-sudo ldconfig   #更新系统的动态链接库共享库缓存
-```
 ## 安装其他包
 
 ```shell
 # 系统python环境中
-sudo pip3 install lark
-sudo pip3 install==3.3.4
-sudo pip3 install numpy==1.24.0 zarr h5py
+pip3 install lark
+pip3 install==3.3.4
+pip3 install numpy==1.24.0
+pip3 install minimalmodbus
+pip3 install pyserial
 ```
 
-# ACT使用说明
 
-## 数据采集
+# 数据采集
 
 ```shell
 #系统python环境编译
 conda deactivate
 rm -rf build/ install/ log/
 colcon build
+source install/setup.bash
 
 #一键启动脚本
-bash bash/startall.sh start/stop
-bash bash/startcamera.sh start/stop
+# ros2 launch teleop_twist_joy teleop-launch.py
+bash scripts/startrobot.sh start/stop
+bash scripts/startcamera.sh start/stop
 
 # 数据采集
-source install/setup.bash
-ros2 run data_sampler data_sampler
+# 默认配置文件：config_data_sampler_default.yaml
+ros2 run data_sampler data_sampler 
+
+# 数据可视化 参数为epoch
+# 默认配置文件：config_visualize_epoch.yaml
+python scripts/visualize_epoch.py 0
+
 ```
 
 操作方式：
 - Y 开始收集
+- B 执行预定义动作
 - upload 结束收集
 - 左摇杆 水平移动
 - 右摇杆 上下移动与旋转
-
-数据可视化
-```shell
-python src/act_plus_plus/act_plus_plus/visualize_episodes.py --dataset_dir 数据集 --episode_idx 0
-```
 
 ## 训练
 

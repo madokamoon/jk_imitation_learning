@@ -427,7 +427,7 @@ class RobotiqGripper( mm.Instrument ):
         #Activate the gripper
         self.activate()
     
-    def goTo(self,position,speed=255,force=255):
+    def goTo(self,position,speed=255,force=255,waitflag=False):
         """Go to the position with determined speed and force.
         
         Args:
@@ -447,8 +447,7 @@ class RobotiqGripper( mm.Instrument ):
         
         #Check if the grippre is activated
         if self.isActivated == False:
-            raise Exception ("Gripper must be activated before requesting\
-                             an action.")
+            raise Exception ("Gripper must be activated before requesting an action.")
 
         #Check input value
         if position>255:
@@ -464,41 +463,43 @@ class RobotiqGripper( mm.Instrument ):
         self.write_registers(1000,[0b0000100100000000,
                                     position,
                                     speed * 0b100000000 + force])
-        
-        #Waiting for activation to complete
-        motionStartTime=time.time()
-        motionCompleted=False
-        motionTime=0
-        objectDetected=False
+        if waitflag==True:
+            #Waiting for activation to complete
+            motionStartTime=time.time()
+            motionCompleted=False
+            motionTime=0
+            objectDetected=False
 
-        while (not objectDetected) and (not motionCompleted)\
-            and (motionTime<self.timeOut):
+            while (not objectDetected) and (not motionCompleted)\
+                and (motionTime<self.timeOut):
 
-            motionTime= time.time()- motionStartTime
-            self.readAll()
-            #Object detection status, is a built-in feature that provides
-            #information on possible object pick-up. Ignore if gGTO == 0.
-            gOBJ=self.paramDic["gOBJ"]
+                motionTime= time.time()- motionStartTime
+                self.readAll()
+                #Object detection status, is a built-in feature that provides
+                #information on possible object pick-up. Ignore if gGTO == 0.
+                gOBJ=self.paramDic["gOBJ"]
 
+                
+                if gOBJ==1 or gOBJ==2: 
+                    #Fingers have stopped due to a contact
+                    objectDetected=True
+                
+                elif gOBJ==3:
+                    #Fingers are at requested position.
+                    objectDetected=False
+                    motionCompleted=True
             
-            if gOBJ==1 or gOBJ==2: 
-                #Fingers have stopped due to a contact
-                objectDetected=True
+            if motionTime>self.timeOut:
+                raise Exception("Gripper never reach its requested position and\
+                                no object have been detected")
             
-            elif gOBJ==3:
-                #Fingers are at requested position.
-                objectDetected=False
-                motionCompleted=True
-        
-        if motionTime>self.timeOut:
-            raise Exception("Gripper never reach its requested position and\
-                            no object have been detected")
-        
-        position=self.paramDic["gPO"]
+            position=self.paramDic["gPO"]
 
-        return position, objectDetected
-        
-    def close(self,speed=255,force=255):
+            return position, objectDetected
+        else:
+            pass
+
+    def close(self,speed=255,force=150):
         """Close the gripper.
 
         Args:
@@ -507,9 +508,10 @@ class RobotiqGripper( mm.Instrument ):
             - force (int, optional): Gripper force between 0 and 255.\
             Default is 255.
         """
-        self.goTo(255,speed,force)
+        self.goToNonBlocking(255, speed, force)
+        # self.goTo(255,speed,force)
     
-    def open(self,speed=255,force=255):
+    def open(self,speed=255,force=150):
         """Open the gripper
         
         Args:
@@ -518,7 +520,8 @@ class RobotiqGripper( mm.Instrument ):
             - force (int, optional): Gripper force between 0 and 255.\
             Default is 255.
         """
-        self.goTo(0,force,speed)
+        self.goToNonBlocking(0, speed, force)
+        # self.goTo(0,speed,force)
     
     def goTomm(self,positionmm,speed=255,force=255):
         """Go to the requested opening expressed in mm
@@ -656,7 +659,7 @@ class RobotiqGripper( mm.Instrument ):
             is_calibrated=True
         
         return is_calibrated
-            
+
 #Test
 if False:
     grip=RobotiqGripper()
@@ -678,4 +681,27 @@ if False:
     
     #grip.calibrate(0,36)
     #grip.goTomm(10,255,255)
-    #grip.goTomm(40,1,255)
+    #grip.goTomm(4
+ 
+
+# import pyRobotiqGripper
+# gripper = pyRobotiqGripper.RobotiqGripper("/dev/ttyUSB0")
+# gripper.activate()
+# gripper.calibrate(0, 40)
+# gripper.open()
+# position_in_bit = gripper.getPosition()
+# print(position_in_bit)
+# position_in_mm = gripper.getPositionmm()
+# print(position_in_mm)
+# gripper.close()
+# position_in_bit = gripper.getPosition()
+# print(position_in_bit)
+# position_in_mm = gripper.getPositionmm()
+# print(position_in_mm)
+# # gripper.goTo(100)
+# # position_in_bit = gripper.getPosition()
+# # print(position_in_bit)
+# # gripper.goTomm(25)
+# # position_in_mm = gripper.getPositionmm()
+# # print(position_in_mm)
+# # gripper.printInfo()

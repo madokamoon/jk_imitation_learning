@@ -14,9 +14,10 @@ robot_client:
   pos_target_d: *pos_target_d
 # XBOX
 xbox_controller:
-  sample_frequency: *sample_frequency
+  sample_frequency: 40
 # 不设置相机
-camera_names: ["camera0", "camera1", "camera2"]
+# camera_names: ["camera0", "camera1", "camera2"]
+camera_names: ["camera0", "camera1"]
 
 
 

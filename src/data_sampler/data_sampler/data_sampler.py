@@ -236,6 +236,7 @@ class DataSampler(Node):
             if not (control_command is None):
                 # self.robot_client.set_end_vel(control_command[0:6].tolist())
                 self.robot_client.set_end_vel(control_command[0:6])
+                # print("control_command: ", [f"{v:.4f}" for v in control_command[0:3]])
                 latent_time = time.time() - start_time
                 if control_command[6] == 1:
                     self.gripper.close()

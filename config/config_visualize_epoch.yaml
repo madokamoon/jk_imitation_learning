@@ -11,6 +11,7 @@ show_data:
   # robot_action: [0,1,2,3,4,5]
 
 
-show_image: []
+# show_image: []
 # show_image: ["camera0"]
+show_image: ["camera0", "camera1"]
 # show_image: ["camera0", "camera1", "camera2"]

@@ -37,8 +37,8 @@ if [ "$1" == "start" ]; then
             enable_depth:=false \
             pointcloud.enable:=false \
             align_depth.enable:=false \
-            depth_module.profile:=640x480x30 \
-            rgb_camera.profile:=640x480x30 &
+            depth_module.profile:=1280x720x30 \
+            rgb_camera.profile:=1280x720x30 &
 
         ros2 param set /$camera_name/$camera_name rgb_camera.enable_auto_exposure 0
         ros2 param set /$camera_name/$camera_name rgb_camera.exposure 300

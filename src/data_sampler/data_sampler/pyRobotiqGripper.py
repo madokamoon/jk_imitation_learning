@@ -508,8 +508,7 @@ class RobotiqGripper( mm.Instrument ):
             - force (int, optional): Gripper force between 0 and 255.\
             Default is 255.
         """
-        self.goToNonBlocking(255, speed, force)
-        # self.goTo(255,speed,force)
+        self.goTo(255,speed,force)
     
     def open(self,speed=255,force=150):
         """Open the gripper
@@ -520,8 +519,7 @@ class RobotiqGripper( mm.Instrument ):
             - force (int, optional): Gripper force between 0 and 255.\
             Default is 255.
         """
-        self.goToNonBlocking(0, speed, force)
-        # self.goTo(0,speed,force)
+        self.goTo(0,speed,force)
     
     def goTomm(self,positionmm,speed=255,force=255):
         """Go to the requested opening expressed in mm

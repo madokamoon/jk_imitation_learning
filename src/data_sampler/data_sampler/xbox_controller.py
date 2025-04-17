@@ -10,6 +10,27 @@ import copy
 from math import *
 import time
 
+
+class SmoothFilter:
+    def __init__(self, alpha=0.2):
+        """
+        初始化平滑滤波器
+        :param alpha: 平滑系数，范围为 (0, 1)，值越小平滑效果越强
+        """
+        self.alpha = alpha
+        self.filtered_value = None
+
+    def update(self, raw_value):
+        if self.filtered_value is None:
+            self.filtered_value = raw_value
+        else:
+            self.filtered_value = self.alpha * raw_value + (1 - self.alpha) * self.filtered_value
+            if(self.filtered_value < 0.01 and self.filtered_value > -0.1):
+                self.filtered_value = 0.0
+        return self.filtered_value
+
+
+
 class XBOXController:
     def __init__(self, sample_frequency:float = 1):
         self.sample_frequency = sample_frequency
@@ -29,12 +50,22 @@ class XBOXController:
         self.RIGHT_HORIZONAL_ID = 3 # 左1.0 右-1.0 Z轴旋转
         self.RIGHT_VERTICAL_ID = 4 # 上1.0 下-1.0 上下
         self.RB_BUTTON_ID = 5 # 未定义
-        self.MAX_END_IINEAR_VEL = 10.0 # cm / s
-        self.MAX_END_ANGLE_VEL = 10.0 # ° / s
+        self.MAX_END_IINEAR_VEL = 8.0 # cm / s
+        self.MAX_END_ANGLE_VEL = 8.0 # ° / s
         # 数据
         self.button_lock = threading.Lock()
         self.multi_press_finish_id = None
         self.control_command = None
+
+        # 初始化平滑滤波器
+        self.smooth_vel_x = SmoothFilter(alpha=0.2)
+        self.smooth_vel_y = SmoothFilter(alpha=0.2)
+        self.smooth_vel_z = SmoothFilter(alpha=0.2)
+        self.smooth_rot_x = SmoothFilter(alpha=0.2)
+        self.smooth_rot_y = SmoothFilter(alpha=0.2)
+        self.smooth_rot_z = SmoothFilter(alpha=0.2)
+
+
 
     def create_joy_subscriber(self, node:rclpy.node.Node, joy_topic:str, qos_profile: int, callback_group:CallbackGroup) -> None:
         node.create_subscription(Joy, joy_topic, self.joy_callback, qos_profile, callback_group=callback_group)
@@ -56,7 +87,7 @@ class XBOXController:
         pressed_buttons_id = []
         self.button_lock.acquire()
         multi_press_finish_id = self.multi_press_finish_id
-        control_command = self.control_command
+        control_command = copy.deepcopy(self.control_command)
         self.button_lock.release()
         if multi_press_finish_id is not None:
             for press_finish_id in multi_press_finish_id:
@@ -112,18 +143,67 @@ class XBOXController:
     def axes_handle(self, msg: Joy) -> np.ndarray:
         buttons = np.array(msg.buttons.tolist())
         if buttons[self.LB_BUTTON_ID] == 1:
-            rot_x = 0.0 if fabs(msg.axes[self.LEFT_VERTICAL_ID]) < 0.001 else msg.axes[self.LEFT_VERTICAL_ID]
-            rot_y = 0.0 if fabs(msg.axes[self.LEFT_HORIZONAL_ID]) < 0.001 else msg.axes[self.LEFT_HORIZONAL_ID]
+            # 处理 rot_x
+            original_value = msg.axes[self.LEFT_VERTICAL_ID]
+            if fabs(original_value) < 0.1:
+                rot_x = 0.0
+            else:
+                reduced_magnitude = max(0, fabs(original_value) - 0.1)
+                rot_x = copysign(reduced_magnitude, original_value)
+                
+            # 处理 rot_y
+            original_value = msg.axes[self.LEFT_HORIZONAL_ID]
+            if fabs(original_value) < 0.1:
+                rot_y = 0.0
+            else:
+                reduced_magnitude = max(0, fabs(original_value) - 0.1)
+                rot_y = copysign(reduced_magnitude, original_value)
+                
             vel_x = 0.0
             vel_y = 0.0
         else:
-            vel_x = 0.0 if fabs(msg.axes[self.LEFT_HORIZONAL_ID]) < 0.001 else -msg.axes[self.LEFT_HORIZONAL_ID]
-            vel_y = 0.0 if fabs(msg.axes[self.LEFT_VERTICAL_ID]) < 0.001 else msg.axes[self.LEFT_VERTICAL_ID]
+            # 处理 vel_x 
+            original_value = -msg.axes[self.LEFT_HORIZONAL_ID]
+            if fabs(original_value) < 0.1:
+                vel_x = 0.0
+            else:
+                reduced_magnitude = max(0, fabs(original_value) - 0.1)
+                vel_x = copysign(reduced_magnitude, original_value)
+                
+            # 处理 vel_y
+            original_value = msg.axes[self.LEFT_VERTICAL_ID]
+            if fabs(original_value) < 0.1:
+                vel_y = 0.0
+            else:
+                reduced_magnitude = max(0, fabs(original_value) - 0.1)
+                vel_y = copysign(reduced_magnitude, original_value)
+                
             rot_x = 0.0
             rot_y = 0.0
 
-        vel_z = 0.0 if fabs(msg.axes[self.RIGHT_VERTICAL_ID]) < 0.001 else msg.axes[self.RIGHT_VERTICAL_ID]
-        rot_z = 0.0 if fabs(msg.axes[self.RIGHT_HORIZONAL_ID]) < 0.001 else -msg.axes[self.RIGHT_HORIZONAL_ID]
+        # 处理 vel_z
+        original_value = msg.axes[self.RIGHT_VERTICAL_ID]
+        if fabs(original_value) < 0.1:
+            vel_z = 0.0
+        else:
+            reduced_magnitude = max(0, fabs(original_value) - 0.1)
+            vel_z = copysign(reduced_magnitude, original_value)
+            
+        # 处理 rot_z 
+        original_value = -msg.axes[self.RIGHT_HORIZONAL_ID]
+        if fabs(original_value) < 0.1:
+            rot_z = 0.0
+        else:
+            reduced_magnitude = max(0, fabs(original_value) - 0.1)
+            rot_z = copysign(reduced_magnitude, original_value)
+
+        # 应用平滑滤波
+        vel_x = self.smooth_vel_x.update(vel_x)
+        vel_y = self.smooth_vel_y.update(vel_y)
+        vel_z = self.smooth_vel_z.update(vel_z)
+        rot_x = self.smooth_rot_x.update(rot_x)
+        rot_y = self.smooth_rot_y.update(rot_y)
+        rot_z = self.smooth_rot_z.update(rot_z)
 
         control_command = np.array([
             vel_x * self.MAX_END_IINEAR_VEL,
@@ -134,4 +214,5 @@ class XBOXController:
             rot_z * self.MAX_END_ANGLE_VEL,
             buttons[self.A_ID]
         ])
+        
         return control_command

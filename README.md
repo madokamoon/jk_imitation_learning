@@ -100,7 +100,6 @@ pip3 install minimalmodbus
 pip3 install pyserial
 ```
 
-
 # 数据采集
 
 ```shell
